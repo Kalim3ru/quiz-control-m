@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control-M Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .options {
+            list-style: none;
+            padding: 0;
+        }
+        .options li {
+            margin-bottom: 10px;
+        }
+        .progress {
+            width: 100%;
+            background-color: #f3f3f3;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            width: 0;
+            height: 20px;
+            background-color: #4caf50;
+        }
+        .result {
+            display: none;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div id="quizContainer">
+        <div id="questionContainer" class="question"></div>
+        <ul id="optionsContainer" class="options"></ul>
+        <div class="buttons">
+            <button id="backButton" onclick="prevQuestion()">Back</button>
+            <button id="nextButton" onclick="nextQuestion()">Next</button>
+        </div>
+    </div>
+    <div id="resultContainer" class="result">
+        <h2>Your Score: <span id="score"></span></h2>
+        <p id="summary"></p>
+        <button onclick="restartQuiz()">Restart Quiz</button>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "What is the primary role of the Control-M/Server?",
+                options: [
+                    "Executing jobs",
+                    "Scheduling and managing jobs",
+                    "Storing job logs",
+                    "Monitoring hardware performance"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which component of Control-M is responsible for executing jobs on target systems?",
+                options: [
+                    "Control-M/Agent",
+                    "Control-M/Server",
+                    "Control-M/EM",
+                    "Control-M/Forecast"
+                ],
+                answer: 0
+            },
+            {
+                question: "What is the function of Control-M/EM?",
+                options: [
+                    "Execution of jobs",
+                    "Job scheduling",
+                    "Centralized monitoring and management",
+                    "Resource allocation"
+                ],
+                answer: 2
+            },
+            {
+                question: "What information is required when creating a new job definition in Control-M?",
+                options: [
+                    "Job name and command",
+                    "Application and folder",
+                    "Both A and B",
+                    "None of the above"
+                ],
+                answer: 2
+            },
+            {
+                question: "In Control-M, what is the purpose of defining a job's 'Execution Date'?",
+                options: [
+                    "To set the priority of the job",
+                    "To specify when the job should run",
+                    "To categorize the job",
+                    "To allocate resources"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which tab in the Control-M interface allows you to set the job's scheduling criteria?",
+                options: [
+                    "General",
+                    "Scheduling",
+                    "Runtime",
+                    "Advanced"
+                ],
+                answer: 1
+            },
+            {
+                question: "What type of variable can be used across multiple jobs and sessions in Control-M?",
+                options: [
+                    "Local variables",
+                    "Global variables",
+                    "Session variables",
+                    "Temporary variables"
+                ],
+                answer: 1
+            },
+            {
+                question: "How do you define a local variable in a Control-M job definition?",
+                options: [
+                    "Use the '%' symbol",
+                    "Use the '&' symbol",
+                    "Use the '$' symbol",
+                    "Use the '@' symbol"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which of the following is a benefit of using variables in job definitions?",
+                options: [
+                    "Enhances security",
+                    "Increases flexibility and reusability",
+                    "Simplifies job execution",
+                    "Reduces processing time"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which On-Do action can be configured to send an email notification if a job fails?",
+                options: [
+                    "On Do Email",
+                    "On Failure Do",
+                    "On Do Notify",
+                    "On Error Do"
+                ],
+                answer: 3
+            },
+            {
+                question: "Where can you configure job notifications in Control-M?",
+                options: [
+                    "In the Job Properties under 'Notifications'",
+                    "In the Control-M/EM configuration",
+                    "In the Resource Manager",
+                    "In the Control-M/Server settings"
+                ],
+                answer: 0
+            },
+            {
+                question: "Which type of action can be used to trigger a subsequent job upon the successful completion of a current job?",
+                options: [
+                    "On Completion Do",
+                    "On Success Do",
+                    "On End Do",
+                    "On Termination Do"
+                ],
+                answer: 1
+            },
+            {
+                question: "What is a quantitative resource in Control-M?",
+                options: [
+                    "A binary resource indicating job permissions",
+                    "A numerical value that controls the number of concurrent jobs",
+                    "A schedule-based resource",
+                    "A hardware-related resource"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which tab would you use to define Control resources for a job?",
+                options: [
+                    "General",
+                    "Resources",
+                    "Scheduling",
+                    "Notifications"
+                ],
+                answer: 1
+            },
+            {
+                question: "Why are Control resources important in job scheduling?",
+                options: [
+                    "They ensure jobs run only when resources are available",
+                    "They determine job execution time",
+                    "They provide detailed job logs",
+                    "They enhance job priority"
+                ],
+                answer: 0
+            },
+            {
+                question: "What is the purpose of the Workload Policy Manager in Control-M?",
+                options: [
+                    "To execute jobs",
+                    "To manage job priorities and resource allocation",
+                    "To store job definitions",
+                    "To monitor job logs"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which of the following can be managed using the Workload Policy Manager?",
+                options: [
+                    "Job execution order",
+                    "Resource usage limits",
+                    "Job priorities",
+                    "All of the above"
+                ],
+                answer: 3
+            },
+            {
+                question: "How can you adjust job priorities in Control-M?",
+                options: [
+                    "Using the Job Definition properties",
+                    "Through the Workload Policy Manager",
+                    "In the Control-M/Agent settings",
+                    "Via the Control-M/EM dashboard"
+                ],
+                answer: 1
+            },
+            {
+                question: "What is the primary function of Control-M/Forecast?",
+                options: [
+                    "To execute jobs",
+                    "To simulate job schedules and predict job execution",
+                    "To monitor system performance",
+                    "To manage job resources"
+                ],
+                answer: 1
+            },
+            {
+                question: "How can Control-M/Forecast help in planning job schedules?",
+                options: [
+                    "By providing real-time job execution data",
+                    "By simulating job flows and predicting potential conflicts",
+                    "By allocating resources dynamically",
+                    "By generating job logs"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which tool in Control-M can be used to verify job schedules before actual execution?",
+                options: [
+                    "Control-M/Server",
+                    "Control-M/EM",
+                    "Control-M/Forecast",
+                    "Control-M/Agent"
+                ],
+                answer: 2
+            },
+            {
+                question: "What does the Control-M Batch Impact Manager do?",
+                options: [
+                    "Manages job definitions",
+                    "Detects and addresses problems in job execution sequences",
+                    "Schedules jobs",
+                    "Monitors resource usage"
+                ],
+                answer: 1
+            },
+            {
+                question: "When should you use Control-M Batch Impact Manager?",
+                options: [
+                    "During job definition",
+                    "To proactively detect and resolve job execution issues",
+                    "For job scheduling",
+                    "For generating job reports"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which of the following is a key benefit of using Batch Impact Manager?",
+                options: [
+                    "Reduced job execution time",
+                    "Enhanced job logging",
+                    "Proactive problem detection and resolution",
+                    "Improved system performance"
+                ],
+                answer: 2
+            },
+            {
+                question: "What is the main purpose of SMART folders in Control-M?",
+                options: [
+                    "To store job logs",
+                    "To organize and manage related jobs",
+                    "To allocate resources",
+                    "To define job execution time"
+                ],
+                answer: 1
+            },
+            {
+                question: "How can SMART folders improve job management in Control-M?",
+                options: [
+                    "By automating job execution",
+                    "By grouping related jobs for better organization",
+                    "By monitoring system performance",
+                    "By enhancing job security"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which of the following can be included in a SMART folder?",
+                options: [
+                    "Job definitions",
+                    "Sub-folders",
+                    "Notifications",
+                    "All of the above"
+                ],
+                answer: 3
+            },
+            {
+                question: "What is the benefit of using job templates in Control-M?",
+                options: [
+                    "Ensures consistent job settings",
+                    "Reduces job creation time",
+                    "Simplifies job management",
+                    "All of the above"
+                ],
+                answer: 3
+            },
+            {
+                question: "How can you create a job template in Control-M?",
+                options: [
+                    "By using the Job Template Wizard",
+                    "By saving an existing job definition as a template",
+                    "By configuring a new job template in the Job Properties",
+                    "By importing a template from the Control-M library"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which setting can be predefined in a job template?",
+                options: [
+                    "Job name",
+                    "Job command",
+                    "Job scheduling criteria",
+                    "All of the above"
+                ],
+                answer: 3
+            },
+            {
+                question: "Which Control-M component is used to monitor and manage job execution?",
+                options: [
+                    "Control-M/Agent",
+                    "Control-M/EM",
+                    "Control-M/Server",
+                    "Control-M/Forecast"
+                ],
+                answer: 1
+            },
+            {
+                question: "What is a 'job flow' in Control-M?",
+                options: [
+                    "The sequence of job executions",
+                    "The log of job execution",
+                    "The resource allocation for jobs",
+                    "The notification process for jobs"
+                ],
+                answer: 0
+            },
+            {
+                question: "How does Control-M ensure job dependencies are managed effectively?",
+                options: [
+                    "Through the use of job conditions and dependencies",
+                    "By allocating more resources",
+                    "By increasing job priority",
+                    "By sending notifications"
+                ],
+                answer: 0
+            },
+            {
+                question: "What is the role of Control-M/Agent in job execution?",
+                options: [
+                    "To define job properties",
+                    "To execute jobs on target systems",
+                    "To manage job scheduling",
+                    "To monitor job logs"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which of the following actions can be performed in the Control-M interface?",
+                options: [
+                    "Creating job definitions",
+                    "Scheduling jobs",
+                    "Monitoring job execution",
+                    "All of the above"
+                ],
+                answer: 3
+            },
+            {
+                question: "How can Control-M help in optimizing resource usage for job execution?",
+                options: [
+                    "By using Control and Quantitative resources",
+                    "By prioritizing jobs",
+                    "By simulating job schedules",
+                    "By sending notifications"
+                ],
+                answer: 0
+            },
+            {
+                question: "What is a key feature of Control-M/Forecast in job management?",
+                options: [
+                    "Real-time job execution monitoring",
+                    "Simulating job schedules to predict execution outcomes",
+                    "Allocating resources dynamically",
+                    "Generating detailed job logs"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which Control-M component assists in detecting job execution problems proactively?",
+                options: [
+                    "Control-M/Server",
+                    "Control-M/Agent",
+                    "Control-M Batch Impact Manager",
+                    "Control-M/EM"
+                ],
+                answer: 2
+            },
+            {
+                question: "What can be included in a SMART folder to enhance job management?",
+                options: [
+                    "Related job definitions",
+                    "Sub-folders",
+                    "Specific job criteria",
+                    "All of the above"
+                ],
+                answer: 3
+            },
+            {
+                question: "How can job templates benefit Control-M users?",
+                options: [
+                    "By ensuring job consistency",
+                    "By reducing setup time for new jobs",
+                    "By simplifying the job creation process",
+                    "All of the above"
+                ],
+                answer: 3
+            },
+            {
+                question: "Which tool in Control-M can be used to verify job schedules?",
+                options: [
+                    "Control-M/EM",
+                    "Control-M/Forecast",
+                    "Control-M/Server",
+                    "Control-M/Agent"
+                ],
+                answer: 1
+            },
+            {
+                question: "What is the purpose of Control-M Batch Impact Manager?",
+                options: [
+                    "To execute jobs",
+                    "To detect and resolve job execution issues",
+                    "To manage job definitions",
+                    "To monitor resource usage"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which Control-M feature helps in grouping related jobs for better management?",
+                options: [
+                    "Job Templates",
+                    "SMART Folders",
+                    "Batch Impact Manager",
+                    "Workload Policy Manager"
+                ],
+                answer: 1
+            },
+            {
+                question: "How does Control-M ensure optimal job scheduling?",
+                options: [
+                    "By using Control resources",
+                    "By using job conditions and dependencies",
+                    "By utilizing the Workload Policy Manager",
+                    "All of the above"
+                ],
+                answer: 3
+            },
+            {
+                question: "Which of the following is a key benefit of using job templates?",
+                options: [
+                    "Ensures consistent job definitions",
+                    "Reduces the time required to create new jobs",
+                    "Simplifies job management",
+                    "All of the above"
+                ],
+                answer: 3
+            },
+            {
+                question: "What role does Control-M/EM play in job management?",
+                options: [
+                    "It executes jobs",
+                    "It schedules jobs",
+                    "It provides centralized monitoring and management",
+                    "It allocates resources"
+                ],
+                answer: 2
+            },
+            {
+                question: "How can Control-M/Forecast assist in job planning?",
+                options: [
+                    "By simulating job schedules",
+                    "By allocating resources dynamically",
+                    "By monitoring job logs",
+                    "By sending notifications"
+                ],
+                answer: 0
+            },
+            {
+                question: "What type of resource controls the number of concurrent jobs in Control-M?",
+                options: [
+                    "Control resource",
+                    "Quantitative resource",
+                    "System resource",
+                    "Job resource"
+                ],
+                answer: 1
+            },
+            {
+                question: "What can you configure in the 'Notifications' section of a job definition?",
+                options: [
+                    "Job dependencies",
+                    "Job conditions",
+                    "Email notifications",
+                    "Job execution time"
+                ],
+                answer: 2
+            },
+            {
+                question: "Which Control-M component provides centralized job management?",
+                options: [
+                    "Control-M/Server",
+                    "Control-M/Agent",
+                    "Control-M/EM",
+                    "Control-M/Forecast"
+                ],
+                answer: 2
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answers = [];
+
+        function loadQuestion() {
+            const questionContainer = document.getElementById("questionContainer");
+            const optionsContainer = document.getElementById("optionsContainer");
+            const progressBar = document.getElementById("progressBar");
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionContainer.textContent = `Question ${currentQuestionIndex + 1}: ${currentQuestion.question}`;
+
+            optionsContainer.innerHTML = "";
+            currentQuestion.options.forEach((option, index) => {
+                const li = document.createElement("li");
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = "option";
+                input.value = index;
+                input.id = `option${index}`;
+                if (answers[currentQuestionIndex] !== undefined && answers[currentQuestionIndex].selected === index) {
+                    input.checked = true;
+                }
+                
+                const label = document.createElement("label");
+                label.htmlFor = input.id;
+                label.textContent = option;
+
+                li.appendChild(input);
+                li.appendChild(label);
+                optionsContainer.appendChild(li);
+            });
+
+            const progressPercentage = ((currentQuestionIndex + 1) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+
+            document.getElementById("backButton").style.display = currentQuestionIndex > 0 ? "inline-block" : "none";
+            document.getElementById("nextButton").textContent = currentQuestionIndex === quizData.length - 1 ? "Finish" : "Next";
+        }
+
+        function nextQuestion() {
+            const selectedOption = document.querySelector('input[name="option"]:checked');
+            if (!selectedOption) {
+                alert("Please select an answer!");
+                return;
+            }
+
+            const answer = parseInt(selectedOption.value);
+            if (answers[currentQuestionIndex] === undefined) {
+                answers[currentQuestionIndex] = { selected: answer, correct: answer === quizData[currentQuestionIndex].answer };
+                if (answers[currentQuestionIndex].correct) {
+                    score++;
+                }
+            } else {
+                answers[currentQuestionIndex].selected = answer;
+                answers[currentQuestionIndex].correct = answer === quizData[currentQuestionIndex].answer;
+                score = answers.reduce((acc, curr) => acc + (curr.correct ? 1 : 0), 0);
+            }
+
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        }
+
+        function showResult() {
+            const quizContainer = document.getElementById("quizContainer");
+            const resultContainer = document.getElementById("resultContainer");
+            const scoreElement = document.getElementById("score");
+            const summaryElement = document.getElementById("summary");
+
+            quizContainer.style.display = "none";
+            resultContainer.style.display = "block";
+            scoreElement.textContent = `${score} out of ${quizData.length} (${((score / quizData.length) * 100).toFixed(2)}%)`;
+
+            let summaryHTML = "<ul>";
+            answers.forEach((answer, index) => {
+                summaryHTML += `<li>Question ${index + 1}: ${quizData[index].question}<br>`;
+                summaryHTML += `Selected Answer: ${quizData[index].options[answer.selected]}<br>`;
+                summaryHTML += `Correct Answer: ${quizData[index].options[quizData[index].answer]}<br>`;
+                summaryHTML += `Result: ${answer.correct ? "Correct" : "Wrong"}</li><br>`;
+            });
+            summaryHTML += "</ul>";
+            summaryElement.innerHTML = summaryHTML;
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            answers = [];
+
+            const quizContainer = document.getElementById("quizContainer");
+            const resultContainer = document.getElementById("resultContainer");
+
+            quizContainer.style.display = "block";
+            resultContainer.style.display = "none";
+
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
